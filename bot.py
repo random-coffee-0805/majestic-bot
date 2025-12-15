@@ -1,34 +1,30 @@
 import discord
 import asyncio
 import os
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from playwright.sync_api import sync_playwright
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = 1450256585313226946
+CHANNEL_ID = 1450256585313226946  # SEU ID AQUI
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
 def tirar_print():
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox"]
+        )
+        page = browser.new_page(viewport={"width": 1920, "height": 1080})
+        page.goto("https://taming.io", timeout=60000)
 
-    driver = webdriver.Chrome(options=options)
-    driver.get("https://taming.io")
-    driver.implicitly_wait(25)
+        page.wait_for_timeout(20000)  # espera o jogo carregar
 
-    # 👉 clique genérico (a shop abre pelo jogo)
-    driver.find_element("tag name", "canvas").click()
-    driver.implicitly_wait(10)
+        caminho = "/tmp/shop.png"
+        page.screenshot(path=caminho, full_page=True)
 
-    caminho = "/tmp/shop.png"
-    driver.save_screenshot(caminho)
-    driver.quit()
-    return caminho
+        browser.close()
+        return caminho
 
 @client.event
 async def on_ready():
@@ -42,7 +38,7 @@ async def loop():
         try:
             imagem = await asyncio.to_thread(tirar_print)
             await canal.send(
-                content="🛒 Screenshot da shop do Taming.io\nVerifique se há **Majestic Butterfly**",
+                content="🛒 Screenshot do Taming.io\nVerifique se há **Majestic Butterfly**",
                 file=discord.File(imagem)
             )
         except Exception as e:
