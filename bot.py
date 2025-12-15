@@ -5,25 +5,30 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = 1450256585313226946
-ITEM = "majestic butterfly"
+CHANNEL_ID = COLE_AQUI_O_ID_DO_CANAL
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-def verificar():
+def tirar_print():
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1920,1080")
 
     driver = webdriver.Chrome(options=options)
     driver.get("https://taming.io")
     driver.implicitly_wait(25)
 
-    achou = ITEM in driver.page_source.lower()
+    # 👉 clique genérico (a shop abre pelo jogo)
+    driver.find_element("tag name", "canvas").click()
+    driver.implicitly_wait(10)
+
+    caminho = "/tmp/shop.png"
+    driver.save_screenshot(caminho)
     driver.quit()
-    return achou
+    return caminho
 
 @client.event
 async def on_ready():
@@ -35,13 +40,14 @@ async def loop():
 
     while True:
         try:
-            existe = await asyncio.to_thread(verificar)
-            if existe:
-                await canal.send("🦋 **Majestic Butterfly disponível no Taming.io!**")
-                await asyncio.sleep(3600)
-        except:
-            pass
+            imagem = await asyncio.to_thread(tirar_print)
+            await canal.send(
+                content="🛒 Screenshot da shop do Taming.io\nVerifique se há **Majestic Butterfly**",
+                file=discord.File(imagem)
+            )
+        except Exception as e:
+            print(e)
 
-        await asyncio.sleep(600)
+        await asyncio.sleep(900)  # 15 minutos
 
 client.run(TOKEN)
