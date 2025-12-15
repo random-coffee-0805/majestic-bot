@@ -5,7 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = COLE_AQUI_O_ID_DO_CANAL
+CHANNEL_ID = 1450256585313226946
 ITEM = "majestic butterfly"
 
 intents = discord.Intents.default()
